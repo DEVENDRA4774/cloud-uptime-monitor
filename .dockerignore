@@ -1,0 +1,30 @@
+# Virtual environment
+venv/
+.venv/
+
+# Database (will be mounted as a volume, not baked in)
+*.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# OS files
+Thumbs.db
+.DS_Store
