@@ -221,7 +221,7 @@ def print_summary(conn):
 # ──────────────────────────────────────────────
 def main():
     print("=" * 65, flush=True)
-    print("   🖥️  Uptime Monitor — with Discord Alerts  (Ctrl+C to stop)", flush=True)
+    print("   🖥️  Uptime Monitor V2 — Live on AWS! 🚀", flush=True)
     print("=" * 65, flush=True)
 
     webhook_set = bool(DISCORD_WEBHOOK_URL)
