@@ -11,9 +11,8 @@ from datetime import datetime, timezone
 URLS_TO_MONITOR = [
     "https://www.google.com",
     "https://www.github.com",
-    "https://www.wikipedia.org",
-    "https://httpstat.us/200",   # Always returns 200 (healthy test)
-    "https://httpstat.us/503",   # Always returns 503 (failure test)
+    "https://www.flipkart.com"
+
 ]
 
 CHECK_INTERVAL_SECONDS = int(os.environ.get("CHECK_INTERVAL", 60))
