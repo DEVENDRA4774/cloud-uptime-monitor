@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cloud Uptime Monitor V2</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">CM</div>
+        <div>
+          <h1>Cloud Monitor V2</h1>
+          <p>Advanced uptime dashboard</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#monitors">Monitors</a>
+        <a href="#activity">Activity</a>
+      </nav>
+
+      <div class="side-panel">
+        <span class="label">Refresh</span>
+        <div class="segmented">
+          <button class="segment active" data-refresh="5000">5s</button>
+          <button class="segment" data-refresh="15000">15s</button>
+          <button class="segment" data-refresh="30000">30s</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Version 2.0 · Live Service Health</p>
+          <h2>Uptime command center</h2>
+        </div>
+        <div class="actions">
+          <button id="checkNow" class="primary-btn">Check now</button>
+          <span id="lastUpdated" class="muted">Waiting for data</span>
+        </div>
+      </header>
+
+      <section id="overview" class="metrics-grid">
+        <div class="metric">
+          <span class="label">Overall uptime</span>
+          <strong id="overallUptime">--</strong>
+          <small id="overallTrend">No checks yet</small>
+        </div>
+        <div class="metric">
+          <span class="label">Healthy services</span>
+          <strong id="healthyCount">--</strong>
+          <small id="totalCount">0 monitored</small>
+        </div>
+        <div class="metric">
+          <span class="label">Average response</span>
+          <strong id="avgResponse">--</strong>
+          <small>Across recorded checks</small>
+        </div>
+        <div class="metric">
+          <span class="label">Alert channels</span>
+          <strong id="alertState">--</strong>
+          <small id="backupState">Backup status loading</small>
+        </div>
+      </section>
+
+      <section class="split-layout">
+        <div class="panel chart-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="label">Performance</span>
+              <h3>Response time trend</h3>
+            </div>
+            <span class="status-pill" id="healthPill">Starting</span>
+          </div>
+          <canvas id="responseChart" width="900" height="320"></canvas>
+        </div>
+
+        <div class="panel control-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="label">Controls</span>
+              <h3>Add monitor</h3>
+            </div>
+          </div>
+          <form id="addUrlForm" class="add-form">
+            <input id="urlInput" type="text" placeholder="https://example.com" autocomplete="off">
+            <button type="submit">Add</button>
+          </form>
+          <div class="config-list">
+            <div><span>Interval</span><strong id="intervalValue">--</strong></div>
+            <div><span>Timeout</span><strong id="timeoutValue">--</strong></div>
+            <div><span>Healthy range</span><strong id="healthyRange">--</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="monitors" class="panel">
+        <div class="panel-heading">
+          <div>
+            <span class="label">Monitors</span>
+            <h3>Tracked endpoints</h3>
+          </div>
+          <input id="filterInput" class="filter" type="search" placeholder="Filter URLs">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>URL</th>
+                <th>Code</th>
+                <th>Response</th>
+                <th>Last check</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="monitorRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="activity" class="panel">
+        <div class="panel-heading">
+          <div>
+            <span class="label">Activity</span>
+            <h3>Recent checks</h3>
+          </div>
+        </div>
+        <div id="activityFeed" class="activity-feed"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

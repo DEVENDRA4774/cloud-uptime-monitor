@@ -1,0 +1,23 @@
+services:
+  uptime-monitor:
+    build: .
+    container_name: uptime-monitor
+    restart: unless-stopped
+    environment:
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - PORT=5000
+      # Note: AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are removed 
+      # because the EC2 instance will use an IAM Role securely.
+      # ─── OPTIONAL: Override check interval (default 60 seconds) ───
+      # - CHECK_INTERVAL=60
+      # - URLS_TO_MONITOR=https://google.com,https://github.com
+    ports:
+      - "5000:5000"
+    volumes:
+      # Named volume — persists uptime.db across container restarts
+      - uptime-data:/data
+
+volumes:
+  uptime-data:

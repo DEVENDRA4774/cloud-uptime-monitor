@@ -1,0 +1,21 @@
+# Virtual environment
+venv/
+.venv/
+
+# Environment variables
+.env
+
+# Database files
+*.db
+uptime.db
+/data/
+
+# IDE / caches
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+
+# Keys
+*.pem
+*.ppk
