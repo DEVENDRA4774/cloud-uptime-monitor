@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cloud Uptime Monitor V2 — Preview</title>
+  <meta name="description" content="Live preview of the Cloud Uptime Monitor V2 dashboard with simulated monitoring data.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --surface-strong: #eef2f7;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d8dee8;
+      --green: #0f9f6e;
+      --red: #d64545;
+      --amber: #c97706;
+      --blue: #2563eb;
+      --navy: #111827;
+      --shadow: 0 14px 35px rgba(23, 32, 51, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: var(--navy);
+      color: #f8fafc;
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #22c55e;
+      color: #08111f;
+      font-weight: 900;
+    }
+
+    .brand h1, .brand p, .topbar h2, .topbar p, .panel h3 { margin: 0; }
+    .brand h1 { font-size: 18px; }
+    .brand p { color: #a8b3c7; font-size: 13px; }
+
+    .nav { display: grid; gap: 6px; }
+    .nav a {
+      color: #cbd5e1;
+      text-decoration: none;
+      padding: 10px 12px;
+      border-radius: 8px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .nav a.active, .nav a:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+
+    .side-panel {
+      margin-top: auto;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .sidebar .label { color: #a8b3c7; }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .segment {
+      border: 0;
+      border-radius: 8px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #dbeafe;
+      transition: background 0.2s, color 0.2s;
+    }
+    .segment.active {
+      background: #ffffff;
+      color: var(--navy);
+    }
+
+    .content {
+      min-width: 0;
+      padding: 28px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .topbar h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.05;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .primary-btn, .add-form button {
+      border: 0;
+      border-radius: 8px;
+      background: var(--blue);
+      color: #ffffff;
+      min-height: 40px;
+      padding: 0 16px;
+      font-weight: 800;
+      box-shadow: 0 10px 18px rgba(37, 99, 235, 0.2);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .primary-btn:hover, .add-form button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 24px rgba(37, 99, 235, 0.3);
+    }
+
+    .muted { color: var(--muted); font-size: 13px; }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .metric, .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    .metric { padding: 18px; }
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 31px;
+      line-height: 1;
+    }
+    .metric small {
+      display: block;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .split-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(290px, 0.8fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .panel { padding: 18px; }
+    .panel-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .panel h3 { font-size: 20px; }
+
+    .status-pill, .state-dot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      min-height: 28px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .status-pill.ok, .state-dot.up { background: #dcfce7; color: #166534; }
+    .status-pill.bad, .state-dot.down { background: #fee2e2; color: #991b1b; }
+    .status-pill.pending, .state-dot.pending { background: #fef3c7; color: #92400e; }
+
+    .chart-panel canvas {
+      width: 100%;
+      height: 320px;
+      display: block;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #f8fafc, #ffffff);
+    }
+
+    .add-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .add-form input, .filter {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 12px;
+      color: var(--ink);
+      background: #ffffff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .add-form input:focus, .filter:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .config-list { display: grid; gap: 10px; margin-top: 18px; }
+    .config-list div {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      background: var(--surface-strong);
+    }
+    .config-list span { color: var(--muted); }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    th, td { padding: 13px 10px; border-bottom: 1px solid var(--line); text-align: left; }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; }
+    .url-cell { font-weight: 700; word-break: break-all; }
+
+    .secondary-btn, .danger-btn {
+      border-radius: 8px;
+      min-height: 34px;
+      padding: 0 10px;
+      font-weight: 800;
+      transition: transform 0.1s;
+    }
+    .secondary-btn:hover, .danger-btn:hover { transform: scale(1.04); }
+    .secondary-btn { border: 1px solid var(--line); background: #f8fafc; color: var(--ink); }
+    .danger-btn { border: 1px solid #fecaca; background: #fff5f5; color: var(--red); }
+
+    .activity-feed {
+      display: grid;
+      gap: 10px;
+      max-height: 420px;
+      overflow-y: auto;
+    }
+
+    .activity-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .activity-item:hover { background: var(--surface-strong); }
+    .activity-item strong { display: block; word-break: break-all; }
+    .activity-item span { color: var(--muted); font-size: 13px; }
+
+    /* Preview banner */
+    .preview-banner {
+      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      color: #fff;
+      text-align: center;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .preview-banner span {
+      background: rgba(255,255,255,0.2);
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin-left: 8px;
+      font-size: 11px;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .metric, .panel, .activity-item {
+      animation: fadeInUp 0.4s ease both;
+    }
+    .metrics-grid .metric:nth-child(2) { animation-delay: 0.06s; }
+    .metrics-grid .metric:nth-child(3) { animation-delay: 0.12s; }
+    .metrics-grid .metric:nth-child(4) { animation-delay: 0.18s; }
+
+    /* Pulse for live dot */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .live-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      margin-right: 6px;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    @media (max-width: 1050px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .nav { grid-auto-flow: column; overflow-x: auto; }
+      .side-panel { margin-top: 0; margin-left: auto; }
+      .metrics-grid, .split-layout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 720px) {
+      .content { padding: 18px; }
+      .topbar, .panel-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .actions, .side-panel { width: 100%; }
+      .metrics-grid, .split-layout { grid-template-columns: 1fr; }
+      .metric strong { font-size: 26px; }
+      .add-form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-banner">
+    ⚡ STATIC PREVIEW — Mock data shown. Run the Flask server for live monitoring.
+    <span>v2.0</span>
+  </div>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">CM</div>
+        <div>
+          <h1>Cloud Monitor V2</h1>
+          <p>Advanced uptime dashboard</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#monitors">Monitors</a>
+        <a href="#activity">Activity</a>
+      </nav>
+
+      <div class="side-panel">
+        <span class="label">Refresh</span>
+        <div class="segmented">
+          <button class="segment active" data-refresh="5000">5s</button>
+          <button class="segment" data-refresh="15000">15s</button>
+          <button class="segment" data-refresh="30000">30s</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Version 2.0 · Live Service Health</p>
+          <h2>Uptime command center</h2>
+        </div>
+        <div class="actions">
+          <button id="checkNow" class="primary-btn">Check now</button>
+          <span id="lastUpdated" class="muted"><span class="live-dot"></span>Updated just now</span>
+        </div>
+      </header>
+
+      <section id="overview" class="metrics-grid">
+        <div class="metric">
+          <span class="label">Overall uptime</span>
+          <strong id="overallUptime" style="color: var(--green)">99.87%</strong>
+          <small id="overallTrend">1,247 checks recorded</small>
+        </div>
+        <div class="metric">
+          <span class="label">Healthy services</span>
+          <strong id="healthyCount">4/5</strong>
+          <small id="totalCount">5 monitored</small>
+        </div>
+        <div class="metric">
+          <span class="label">Average response</span>
+          <strong id="avgResponse">142.3 ms</strong>
+          <small>Across recorded checks</small>
+        </div>
+        <div class="metric">
+          <span class="label">Alert channels</span>
+          <strong id="alertState">Discord on</strong>
+          <small id="backupState">S3 backups enabled</small>
+        </div>
+      </section>
+
+      <section class="split-layout">
+        <div class="panel chart-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="label">Performance</span>
+              <h3>Response time trend</h3>
+            </div>
+            <span class="status-pill ok" id="healthPill">All healthy</span>
+          </div>
+          <canvas id="responseChart" width="900" height="320"></canvas>
+        </div>
+
+        <div class="panel control-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="label">Controls</span>
+              <h3>Add monitor</h3>
+            </div>
+          </div>
+          <form id="addUrlForm" class="add-form" onsubmit="event.preventDefault()">
+            <input id="urlInput" type="text" placeholder="https://example.com" autocomplete="off">
+            <button type="submit">Add</button>
+          </form>
+          <div class="config-list">
+            <div><span>Interval</span><strong>30s</strong></div>
+            <div><span>Timeout</span><strong>10s</strong></div>
+            <div><span>Healthy range</span><strong>200-399</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="monitors" class="panel">
+        <div class="panel-heading">
+          <div>
+            <span class="label">Monitors</span>
+            <h3>Tracked endpoints</h3>
+          </div>
+          <input id="filterInput" class="filter" type="search" placeholder="Filter URLs">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>URL</th>
+                <th>Code</th>
+                <th>Response</th>
+                <th>Last check</th>
+                <th></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="monitorRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="activity" class="panel">
+        <div class="panel-heading">
+          <div>
+            <span class="label">Activity</span>
+            <h3>Recent checks</h3>
+          </div>
+        </div>
+        <div id="activityFeed" class="activity-feed"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ── Mock Data ──────────────────────────────────────────────
+    const MOCK_MONITORS = [
+      { url: "https://api.example.com",     is_up: true,  status_code: 200, response_ms: 89.2,   timestamp: "2026-07-05T12:48:00Z", uptime_pct: "100.00" },
+      { url: "https://dashboard.example.io", is_up: true,  status_code: 200, response_ms: 142.7,  timestamp: "2026-07-05T12:48:01Z", uptime_pct: "99.96" },
+      { url: "https://auth.example.com",     is_up: true,  status_code: 200, response_ms: 67.3,   timestamp: "2026-07-05T12:48:01Z", uptime_pct: "100.00" },
+      { url: "https://cdn.example.net",      is_up: true,  status_code: 200, response_ms: 31.1,   timestamp: "2026-07-05T12:48:02Z", uptime_pct: "99.99" },
+      { url: "https://staging.example.dev",  is_up: false, status_code: 503, response_ms: 2104.5, timestamp: "2026-07-05T12:47:55Z", uptime_pct: "94.12" },
+    ];
+
+    const MOCK_CHART = [
+      { avg_ms: 120, uptime_pct: 100 },
+      { avg_ms: 135, uptime_pct: 100 },
+      { avg_ms: 98,  uptime_pct: 100 },
+      { avg_ms: 144, uptime_pct: 100 },
+      { avg_ms: 110, uptime_pct: 100 },
+      { avg_ms: 156, uptime_pct: 99.8 },
+      { avg_ms: 189, uptime_pct: 99.2 },
+      { avg_ms: 210, uptime_pct: 98.5 },
+      { avg_ms: 172, uptime_pct: 99.1 },
+      { avg_ms: 148, uptime_pct: 99.9 },
+      { avg_ms: 125, uptime_pct: 100 },
+      { avg_ms: 138, uptime_pct: 100 },
+      { avg_ms: 102, uptime_pct: 100 },
+      { avg_ms: 94,  uptime_pct: 100 },
+      { avg_ms: 142, uptime_pct: 100 },
+    ];
+
+    // ── Render Monitors Table ──────────────────────────────────
+    function renderMonitors() {
+      const tbody = document.getElementById("monitorRows");
+      tbody.innerHTML = MOCK_MONITORS.map(m => {
+        const cls = m.is_up ? "up" : "down";
+        const txt = m.is_up ? "UP" : "DOWN";
+        const ts  = new Date(m.timestamp).toLocaleString();
+        return `
+          <tr>
+            <td><span class="state-dot ${cls}">${txt}</span></td>
+            <td class="url-cell">${m.url} <span class="muted"> · ${m.uptime_pct}% uptime</span></td>
+            <td>${m.status_code}</td>
+            <td>${m.response_ms.toFixed(1)} ms</td>
+            <td>${ts}</td>
+            <td><button class="secondary-btn">Stop</button></td>
+            <td><button class="danger-btn">Remove</button></td>
+          </tr>`;
+      }).join("");
+    }
+
+    // ── Render Activity Feed ───────────────────────────────────
+    function renderActivity() {
+      const feed = document.getElementById("activityFeed");
+      // repeat monitors as recent checks
+      const logs = [...MOCK_MONITORS, ...MOCK_MONITORS.map(m => ({
+        ...m,
+        response_ms: m.response_ms * (0.8 + Math.random() * 0.4),
+        timestamp: new Date(Date.now() - Math.random() * 300000).toISOString()
+      }))].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      feed.innerHTML = logs.map(l => {
+        const cls = l.is_up ? "up" : "down";
+        const txt = l.is_up ? "UP" : "DOWN";
+        return `
+          <div class="activity-item">
+            <span class="state-dot ${cls}">${txt}</span>
+            <div>
+              <strong>${l.url}</strong>
+              <span>${new Date(l.timestamp).toLocaleString()} · code ${l.status_code}</span>
+            </div>
+            <strong>${l.response_ms.toFixed(1)} ms</strong>
+          </div>`;
+      }).join("");
+    }
+
+    // ── Draw Chart ─────────────────────────────────────────────
+    function drawChart() {
+      const canvas = document.getElementById("responseChart");
+      const ctx = canvas.getContext("2d");
+      const points = MOCK_CHART;
+      const width = canvas.width;
+      const height = canvas.height;
+      const padding = 34;
+
+      ctx.clearRect(0, 0, width, height);
+
+      // gradient background
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+      bgGrad.addColorStop(0, "#f8fafc");
+      bgGrad.addColorStop(1, "#ffffff");
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, width, height);
+
+      // grid lines
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 5; i++) {
+        const y = padding + ((height - padding * 2) / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(width - padding, y);
+        ctx.stroke();
+      }
+
+      const values = points.map(p => p.avg_ms);
+      const max = Math.max(...values, 100);
+      const plotW = width - padding * 2;
+      const plotH = height - padding * 2;
+
+      // area fill
+      ctx.beginPath();
+      points.forEach((p, i) => {
+        const x = padding + (plotW / (points.length - 1)) * i;
+        const y = height - padding - (p.avg_ms / max) * plotH;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      const lastX = padding + plotW;
+      ctx.lineTo(lastX, height - padding);
+      ctx.lineTo(padding, height - padding);
+      ctx.closePath();
+      const areaGrad = ctx.createLinearGradient(0, padding, 0, height - padding);
+      areaGrad.addColorStop(0, "rgba(37, 99, 235, 0.18)");
+      areaGrad.addColorStop(1, "rgba(37, 99, 235, 0.02)");
+      ctx.fillStyle = areaGrad;
+      ctx.fill();
+
+      // line
+      ctx.beginPath();
+      points.forEach((p, i) => {
+        const x = padding + (plotW / (points.length - 1)) * i;
+        const y = height - padding - (p.avg_ms / max) * plotH;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = "#2563eb";
+      ctx.lineWidth = 3;
+      ctx.lineJoin = "round";
+      ctx.stroke();
+
+      // dots
+      points.forEach((p, i) => {
+        const x = padding + (plotW / (points.length - 1)) * i;
+        const y = height - padding - (p.avg_ms / max) * plotH;
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = p.uptime_pct >= 100 ? "#0f9f6e" : "#d64545";
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+
+      // axis labels
+      ctx.fillStyle = "#667085";
+      ctx.font = "13px Inter, sans-serif";
+      ctx.fillText("0 ms", padding, height - 10);
+      ctx.fillText(`${max.toFixed(0)} ms`, padding, 18);
+    }
+
+    // ── Init ───────────────────────────────────────────────────
+    renderMonitors();
+    renderActivity();
+    drawChart();
+
+    // Interactive segment buttons
+    document.querySelectorAll(".segment").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".segment").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+
+    // Nav links
+    document.querySelectorAll(".nav a").forEach(a => {
+      a.addEventListener("click", () => {
+        document.querySelectorAll(".nav a").forEach(l => l.classList.remove("active"));
+        a.classList.add("active");
+      });
+    });
+  </script>
+</body>
+</html>
