@@ -14,6 +14,41 @@ An advanced, Dockerized uptime monitor built with Python, Flask, SQLite, Discord
 - Configurable check interval, timeout, healthy status-code range, and startup URLs.
 - Docker support with dashboard port exposed.
 
+## 🏗️ Architecture
+
+```mermaid
+graph LR
+    A["Monitor Loop (Thread)"] -->|HTTP GET| B["Target URLs"]
+    B -->|Status Code + Latency| A
+    A -->|Log Result| C[("SQLite DB")]
+    A -->|Down/Recovered| D["Discord Webhook"]
+    A -->|Daily Backup| E["AWS S3"]
+    F["Flask Dashboard"] -->|REST API| C
+    G["GitHub Push"] -->|CI/CD| H["EC2 Deploy"]
+    F -->|Browser| I["User"]
+```
+
+## 📁 Project Structure
+
+```
+cloud-uptime-monitor/
+├── .github/workflows/
+│   └── deploy.yml          # CI/CD: auto-deploy to EC2 on push
+├── static/
+│   ├── app.js              # Dashboard JavaScript (charts, API calls)
+│   └── styles.css           # Dashboard styling
+├── templates/
+│   └── index.html           # Dashboard HTML template
+├── tests/
+│   └── test_monitor.py      # Unit tests (30 cases)
+├── .env.example             # Environment variable template
+├── Dockerfile               # Production container image
+├── docker-compose.yml       # Container orchestration
+├── monitor.py               # Core application (Flask + monitor loop)
+├── requirements.txt         # Pinned Python dependencies
+└── README.md
+```
+
 ## 🖥️ Interactive Dashboard
 
 This project includes a live web dashboard with:

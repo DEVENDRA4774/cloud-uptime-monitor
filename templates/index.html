@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cloud Uptime Monitor V2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
@@ -12,8 +15,8 @@
       <div class="brand">
         <div class="brand-mark">CM</div>
         <div>
-          <h1>Cloud Monitor V2</h1>
-          <p>Advanced uptime dashboard</p>
+          <h1>Cloud Monitor</h1>
+          <p>Uptime Dashboard 10/10</p>
         </div>
       </div>
 
@@ -24,7 +27,7 @@
       </nav>
 
       <div class="side-panel">
-        <span class="label">Refresh</span>
+        <span class="label">Auto Refresh</span>
         <div class="segmented">
           <button class="segment active" data-refresh="5000">5s</button>
           <button class="segment" data-refresh="15000">15s</button>
@@ -36,10 +39,11 @@
     <main class="content">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Version 2.0 · Live Service Health</p>
-          <h2>Uptime command center</h2>
+          <p class="eyebrow">AWS-CONNECTED MONITORING ENGINE</p>
+          <h2>Uptime Command Center</h2>
         </div>
         <div class="actions">
+          <button id="themeToggle" class="secondary-btn" style="min-height: 44px; padding: 0 16px;">🌙 Dark</button>
           <button id="checkNow" class="primary-btn">Check now</button>
           <span id="lastUpdated" class="muted">Waiting for data</span>
         </div>
@@ -47,24 +51,24 @@
 
       <section id="overview" class="metrics-grid">
         <div class="metric">
-          <span class="label">Overall uptime</span>
+          <span class="label">Overall Uptime</span>
           <strong id="overallUptime">--</strong>
           <small id="overallTrend">No checks yet</small>
         </div>
         <div class="metric">
-          <span class="label">Healthy services</span>
+          <span class="label">Healthy Services</span>
           <strong id="healthyCount">--</strong>
           <small id="totalCount">0 monitored</small>
         </div>
         <div class="metric">
-          <span class="label">Average response</span>
+          <span class="label">Average Response</span>
           <strong id="avgResponse">--</strong>
           <small>Across recorded checks</small>
         </div>
         <div class="metric">
-          <span class="label">Alert channels</span>
+          <span class="label">Integrations</span>
           <strong id="alertState">--</strong>
-          <small id="backupState">Backup status loading</small>
+          <small id="backupState">S3 Backups loading</small>
         </div>
       </section>
 
@@ -73,18 +77,20 @@
           <div class="panel-heading">
             <div>
               <span class="label">Performance</span>
-              <h3>Response time trend</h3>
+              <h3>Response Time Trend</h3>
             </div>
             <span class="status-pill" id="healthPill">Starting</span>
           </div>
-          <canvas id="responseChart" width="900" height="320"></canvas>
+          <div class="chart-scroll-wrap" style="overflow-x: auto; width: 100%; border-radius: 8px;">
+            <canvas id="responseChart" width="1100" height="320" style="display: block; min-width: 900px;"></canvas>
+          </div>
         </div>
 
         <div class="panel control-panel">
           <div class="panel-heading">
             <div>
               <span class="label">Controls</span>
-              <h3>Add monitor</h3>
+              <h3>Add Website</h3>
             </div>
           </div>
           <form id="addUrlForm" class="add-form">
@@ -92,9 +98,9 @@
             <button type="submit">Add</button>
           </form>
           <div class="config-list">
-            <div><span>Interval</span><strong id="intervalValue">--</strong></div>
-            <div><span>Timeout</span><strong id="timeoutValue">--</strong></div>
-            <div><span>Healthy range</span><strong id="healthyRange">--</strong></div>
+            <div><span>Check Interval</span><strong id="intervalValue">--</strong></div>
+            <div><span>Request Timeout</span><strong id="timeoutValue">--</strong></div>
+            <div><span>Healthy Status Range</span><strong id="healthyRange">--</strong></div>
           </div>
         </div>
       </section>
@@ -103,7 +109,7 @@
         <div class="panel-heading">
           <div>
             <span class="label">Monitors</span>
-            <h3>Tracked endpoints</h3>
+            <h3>Tracked Endpoints</h3>
           </div>
           <input id="filterInput" class="filter" type="search" placeholder="Filter URLs">
         </div>
@@ -113,11 +119,12 @@
               <tr>
                 <th>Status</th>
                 <th>URL</th>
+                <th>SSL Status</th>
+                <th>Uptime History</th>
                 <th>Code</th>
                 <th>Response</th>
-                <th>Last check</th>
-                <th></th>
-                <th></th>
+                <th>Last Check</th>
+                <th colspan="2">Actions</th>
               </tr>
             </thead>
             <tbody id="monitorRows"></tbody>
@@ -129,7 +136,7 @@
         <div class="panel-heading">
           <div>
             <span class="label">Activity</span>
-            <h3>Recent checks</h3>
+            <h3>Recent Checks Log</h3>
           </div>
         </div>
         <div id="activityFeed" class="activity-feed"></div>

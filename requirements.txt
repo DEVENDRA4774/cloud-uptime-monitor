@@ -1,3 +1,4 @@
-requests
-boto3
-Flask
+requests==2.32.3
+boto3==1.35.0
+Flask==3.1.0
+pytest==8.3.5
