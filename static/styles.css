@@ -349,14 +349,24 @@ th {
   word-break: break-all;
 }
 
+.secondary-btn,
 .danger-btn {
-  border: 1px solid #fecaca;
   border-radius: 8px;
   min-height: 34px;
   padding: 0 10px;
+  font-weight: 800;
+}
+
+.secondary-btn {
+  border: 1px solid var(--line);
+  background: #f8fafc;
+  color: var(--ink);
+}
+
+.danger-btn {
+  border: 1px solid #fecaca;
   background: #fff5f5;
   color: var(--red);
-  font-weight: 800;
 }
 
 .activity-feed {

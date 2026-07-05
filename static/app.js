@@ -102,6 +102,7 @@ function renderRows() {
           <td>${code}</td>
           <td>${response}</td>
           <td>${formatTime(latest.timestamp)}</td>
+          <td><button class="secondary-btn" data-stop="${encodeURIComponent(url)}">Stop</button></td>
           <td><button class="danger-btn" data-remove="${encodeURIComponent(url)}">Remove</button></td>
         </tr>
       `;
@@ -249,9 +250,21 @@ async function removeUrl(url) {
   await loadData();
 }
 
+async function stopUrl(url) {
+  await fetch("/api/urls/stop", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+  await loadData();
+}
+
 document.addEventListener("click", (event) => {
   const remove = event.target.closest("[data-remove]");
   if (remove) removeUrl(decodeURIComponent(remove.dataset.remove));
+
+  const stop = event.target.closest("[data-stop]");
+  if (stop) stopUrl(decodeURIComponent(stop.dataset.stop));
 
   const segment = event.target.closest("[data-refresh]");
   if (segment) {

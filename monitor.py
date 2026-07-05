@@ -1,8 +1,10 @@
+import ipaddress
 import os
 import sqlite3
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from urllib.parse import urlparse
 
 import boto3
 import requests
@@ -27,8 +29,10 @@ def parse_urls(value):
 INITIAL_URLS = parse_urls(os.environ.get("URLS_TO_MONITOR", ",".join(DEFAULT_URLS)))
 CHECK_INTERVAL_SECONDS = int(os.environ.get("CHECK_INTERVAL", 60))
 REQUEST_TIMEOUT_SECONDS = int(os.environ.get("REQUEST_TIMEOUT", 10))
+RETRY_ATTEMPTS = int(os.environ.get("RETRY_ATTEMPTS", 2))
 HEALTHY_STATUS_MIN = int(os.environ.get("HEALTHY_STATUS_MIN", 200))
 HEALTHY_STATUS_MAX = int(os.environ.get("HEALTHY_STATUS_MAX", 399))
+LOG_RETENTION_DAYS = int(os.environ.get("LOG_RETENTION_DAYS", 90))
 PORT = int(os.environ.get("PORT", 5000))
 
 # Data directory — defaults to "." for local, set to "/data" in Docker
@@ -103,10 +107,35 @@ def init_db():
 
 
 def normalize_url(url):
-    cleaned = url.strip()
-    if cleaned and not cleaned.startswith(("http://", "https://")):
+    cleaned = (url or "").strip()
+    if cleaned and "://" not in cleaned:
         cleaned = f"https://{cleaned}"
     return cleaned.rstrip("/")
+
+
+def validate_url(url):
+    cleaned = normalize_url(url)
+    if not cleaned:
+        raise ValueError("URL is required.")
+
+    parsed = urlparse(cleaned)
+    if parsed.scheme not in {"http", "https"}:
+        raise ValueError("URL must start with http:// or https://")
+    if not parsed.netloc:
+        raise ValueError("URL is missing a hostname.")
+
+    hostname = (parsed.hostname or "").lower()
+    if hostname in {"localhost", "::1"}:
+        raise ValueError("Local URLs are not allowed.")
+
+    try:
+        ip = ipaddress.ip_address(hostname)
+    except ValueError:
+        return cleaned
+
+    if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_reserved:
+        raise ValueError("Private or local network targets are not allowed.")
+    return cleaned
 
 
 def get_active_urls():
@@ -123,9 +152,7 @@ def get_active_urls():
 
 
 def add_monitor(url):
-    normalized = normalize_url(url)
-    if not normalized:
-        raise ValueError("URL is required.")
+    normalized = validate_url(url)
 
     with db_lock:
         conn = get_connection()
@@ -141,8 +168,8 @@ def add_monitor(url):
     return normalized
 
 
-def remove_monitor(url):
-    normalized = normalize_url(url)
+def stop_monitor(url):
+    normalized = validate_url(url)
     with db_lock:
         conn = get_connection()
         conn.execute("UPDATE monitors SET active = 0 WHERE url = ?", (normalized,))
@@ -152,6 +179,10 @@ def remove_monitor(url):
     latest_status.pop(normalized, None)
     currently_down.discard(normalized)
     return normalized
+
+
+def remove_monitor(url):
+    return stop_monitor(url)
 
 
 def log_result(url, status_code, response_ms, is_up):
@@ -245,6 +276,17 @@ def fetch_chart_points(limit=80):
     return [dict(row) for row in rows]
 
 
+def prune_old_logs():
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=LOG_RETENTION_DAYS)).strftime("%Y-%m-%d %H:%M:%S")
+    with db_lock:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM uptime_logs WHERE timestamp < ?", (cutoff,))
+        conn.commit()
+        conn.close()
+    print(f"[DB] Pruned uptime logs older than {LOG_RETENTION_DAYS} days.", flush=True)
+
+
 # ──────────────────────────────────────────────
 # DISCORD ALERTS
 # ──────────────────────────────────────────────
@@ -333,18 +375,22 @@ def backup_to_s3():
 # HEALTH CHECK
 # ──────────────────────────────────────────────
 def check_url(url):
-    try:
-        start = time.time()
-        response = requests.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
-        elapsed_ms = (time.time() - start) * 1000
-        is_up = HEALTHY_STATUS_MIN <= response.status_code <= HEALTHY_STATUS_MAX
-        return response.status_code, elapsed_ms, is_up
-    except requests.exceptions.RequestException:
-        return None, 0, False
+    attempts = max(1, RETRY_ATTEMPTS)
+    for attempt in range(attempts):
+        try:
+            start = time.time()
+            response = requests.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
+            elapsed_ms = (time.time() - start) * 1000
+            is_up = HEALTHY_STATUS_MIN <= response.status_code <= HEALTHY_STATUS_MAX
+            return response.status_code, elapsed_ms, is_up, None
+        except Exception:
+            if attempt < attempts - 1:
+                continue
+            return None, 0, False, None
 
 
 def run_single_check(url):
-    status_code, response_ms, is_up = check_url(url)
+    status_code, response_ms, is_up, _ = check_url(url)
     log_result(url, status_code, response_ms, is_up)
     print_result(url, status_code, response_ms, is_up)
     handle_alerts(url, is_up, status_code, response_ms)
@@ -438,6 +484,16 @@ def api_add_url():
     return jsonify({"ok": True, "url": url})
 
 
+@app.post("/api/urls/stop")
+def api_stop_url():
+    data = request.get_json(silent=True) or {}
+    try:
+        url = stop_monitor(data.get("url") or "")
+    except ValueError as error:
+        return jsonify({"ok": False, "error": str(error)}), 400
+    return jsonify({"ok": True, "url": url})
+
+
 @app.delete("/api/urls")
 def api_delete_url():
     data = request.get_json(silent=True) or {}
@@ -467,6 +523,7 @@ def monitor_loop():
             last_backup_time = time.time()
 
         run_check_round()
+        prune_old_logs()
         print(f"   Next check in {CHECK_INTERVAL_SECONDS}s.", flush=True)
         time.sleep(CHECK_INTERVAL_SECONDS)
 
